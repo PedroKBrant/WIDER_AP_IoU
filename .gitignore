@@ -2,6 +2,9 @@ __pycache__
 *.zip
 *.out
 *.fid_cache
+*.jpg
+*.png
+*.jpeg
 *.npy
 *.gz
 *.ipynb
