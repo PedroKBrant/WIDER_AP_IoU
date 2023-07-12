@@ -1,8 +1,5 @@
 __pycache__
 *.zip
-*.jpg
-*.jpeg
-*.png
 *.out
 *.fid_cache
 *.npy
