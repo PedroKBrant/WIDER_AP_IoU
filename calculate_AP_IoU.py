@@ -2,7 +2,7 @@ from shapely.geometry import box
 from sklearn.metrics import fbeta_score, average_precision_score
 import numpy as np
 from matplotlib import pyplot as plt
-
+from tqdm import tqdm
 class FileData:
     def __init__(self, name, length, coordinates):
         self.name = name
@@ -129,27 +129,26 @@ def evaluate(iou_threshold, parsed_gt, parsed_predicted, plot=False):
     FN_ = 0
     precision = []
     recall = []
-    i=0
-    for predicted_image in parsed_predicted:
-      gt_image = aux_match_image(predicted_image, parsed_gt)
-      TP, FP, FN = calculate_TP_FP_FN(gt_image, predicted_image, iou_threshold)
-      TP_+=TP
-      FP_+=FP
-      FN_+=FN
-      fn = [1, 2, 6, 1, 3]
-      tp = [11, 2, 0, 2, 1]
-      fp = [2, 0, 1, 1, 0]
-      if (TP_ != 0):
-        precision.append(TP_/(TP_+FP_))
-        recall.append(TP_/(TP_+FN_))
-      else:
-        precision.append(0.0)
-        recall.append(0.0)        
+
+    for predicted_image in tqdm(parsed_predicted, desc="Evaluating images"):
+        gt_image = aux_match_image(predicted_image, parsed_gt)
+        TP, FP, FN = calculate_TP_FP_FN(gt_image, predicted_image, iou_threshold)
+        TP_ += TP
+        FP_ += FP
+        FN_ += FN
+
+        if (TP_ != 0):
+            precision.append(TP_ / (TP_ + FP_))
+            recall.append(TP_ / (TP_ + FN_))
+        else:
+            precision.append(0.0)
+            recall.append(0.0)        
         
     recall, precision = (list(t) for t in zip(*sorted(zip(recall, precision))))
     
     ap, mpre, mrec, ii = CalculateAveragePrecision(precision, recall)
-    if(plot):plot_ap(recall, precision, 1, ap, mrec, mpre, tipo="Todos os pontos")
+    if plot:
+        plot_ap(recall, precision, 1, ap, mrec, mpre, tipo="Todos os pontos")
     return ap
 
 def main(iou_threshold=0.5, gt=None, predicted=None, plot=False):
@@ -159,9 +158,9 @@ def main(iou_threshold=0.5, gt=None, predicted=None, plot=False):
         return 0
     print("Calculating AP for: ", predicted)
     parsed_gt = parse_file(gt)
-    print("Ground Truth Parsed Sucessfully")
+    #print("Ground Truth Parsed Sucessfully")
     parsed_predicted = parse_file(predicted)
-    print("Predicted Parsed Sucessfully")
+    #print("Predicted Parsed Sucessfully")
     result = evaluate(iou_threshold, parsed_gt, parsed_predicted, plot)
     print('Average IoU = %s' % str(result))
 
@@ -176,4 +175,5 @@ if __name__ == '__main__':
                  ["bbox/WIDER_DP2_CF_easy.txt","bbox/WIDER_DP2_CF_medium.txt","bbox/WIDER_DP2_CF_hard.txt"]]
     iou_threshold=0.5
     for i in (0,1,2):
-        main(iou_threshold, gt, predicted[0][i])
+        for j in (0,1,2):
+            main(iou_threshold, gt, predicted[i][j])
